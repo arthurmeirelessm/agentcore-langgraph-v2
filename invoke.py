@@ -5,7 +5,7 @@ client = boto3.client('bedrock-agentcore', region_name='us-east-1')
 
 # Payload atualizado
 payload_dict = {
-    "prompt": "Qual o valroes atual da NVIDIA?",
+    "prompt": "Qual o valor atual da NVIDIA?",
     "actor_id": "12345",
     "session_id": "3456789",
     "identity_id": "1234r-defgh-4e56dfh-34te5yh",

@@ -5,6 +5,7 @@ from typing import Dict, Any
 from src.graph import compile_graph
 from src.state import AgentState
 from src.utils.logger import setup_logger
+from src.repository.memory.agent_memory import AgentMemory
 import traceback
 
 logger = setup_logger(__name__)
@@ -20,6 +21,7 @@ class MarketTrendsAgent:
         """Inicializa o agente"""
         self.graph = None
         self._initialize_agent()
+        self.agent_memory = AgentMemory()
 
     def _initialize_agent(self):
         """Configura e inicializa o grafo do agente"""
@@ -39,8 +41,8 @@ class MarketTrendsAgent:
     def process_request(
         self,
         user_input: str,
-        actor_id: str = "default_user",
-        session_id: str = "default_session"
+        actor_id: str,
+        session_id: str
     ) -> str:
         """
         Processa uma requisição do usuário
@@ -68,9 +70,13 @@ class MarketTrendsAgent:
 
             # Executa o grafo
             result = self.graph.invoke(initial_state)
-
+            
+            self.agent_memory.save_episode(result)
+            
             # Extrai resposta final
             response_text = result.get("final_response")
+            
+                    
 
             if not response_text:
                 response_text = "I apologize, but I couldn't generate a response. Please try again."
@@ -89,8 +95,8 @@ class MarketTrendsAgent:
     def __call__(
         self,
         user_input: str,
-        actor_id: str = "default_user",
-        session_id: str = "default_session"
+        actor_id: str ,
+        session_id: str
     ) -> str:
         """
         Permite chamar a instância diretamente

@@ -14,7 +14,7 @@ def main():
         response = agent.process_request(
             user_input=user_input,
             actor_id="local_user",
-            session_id="local_session"
+            session_id="local_session_343434"
         )
 
         print("\nAgent >", response)

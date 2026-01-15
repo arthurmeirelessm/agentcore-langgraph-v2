@@ -6,6 +6,7 @@ from src.state import AgentState
 from src.nodes.analyzer import analyze_request
 from src.nodes.tools_executor import execute_tools
 from src.utils.logger import setup_logger
+from src.nodes.memory_loader import MemoryLoader
 
 logger = setup_logger(__name__)
 
@@ -23,11 +24,15 @@ def create_market_agent_graph() -> StateGraph:
     workflow = StateGraph(AgentState)
     
     # Adiciona nós
+    workflow.add_node("load_memory", MemoryLoader())
+
     workflow.add_node("analyze", analyze_request)
     workflow.add_node("execute_tools", execute_tools)
     
     # Define ponto de entrada
-    workflow.set_entry_point("analyze")
+    workflow.set_entry_point("load_memory")
+    
+    workflow.add_edge("load_memory", "analyze")
     
     # Define transições condicionais
     def should_execute_tools(state: AgentState) -> str:
