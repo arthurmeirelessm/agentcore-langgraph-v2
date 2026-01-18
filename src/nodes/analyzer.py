@@ -55,6 +55,8 @@ def analyze_request(state: AgentState) -> dict:
             "tools_needed": ["tool1", "tool2"],
             "tool_params": {{"tool1": {{"param": "value"}}}},
             "reasoning": "Por que essas ferramentas são necessárias?",
+            "goal" "Intenção real do input do usuário",
+            "topic": "Tópico raiz da intenção. Exemplo: Futebol, Finanças"
             "needs_tools": true/false
         }}
 
@@ -83,16 +85,24 @@ def analyze_request(state: AgentState) -> dict:
             return {
                 "tools_to_execute": analysis.get("tools_needed", []),
                 "next_step": "execute_tools",
+                "goal": analysis.get("goal"),
+                "topic": analysis.get("topic"),
+                "error": False
             }
 
         return {
             "final_response": analysis.get("direct_response", content),
             "next_step": "end",
+            "goal": analysis.get("goal"),
+            "topic": analysis.get("topic"),
+            "error": False
         }
 
     except Exception as e:
         logger.exception("Error in analyze_request")
         return {
-            "error": str(e),
             "next_step": "end",
+            "goal": analysis.get("goal"),
+            "topic": analysis.get("topic"),
+            "error": True
         }

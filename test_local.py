@@ -6,18 +6,15 @@ def main():
     print("🧠 Market Trends Agent (local)")
     print("Digite 'exit' para sair")
 
-    while True:
-        user_input = input("\nUser > ")
-        if user_input.lower() == "exit":
-            break
+    user_input = "Noticia Barcelona"
+    
+    response = agent.process_request(
+        user_input=user_input,
+        actor_id="local_user",
+        session_id="local_session_343434"
+    )
 
-        response = agent.process_request(
-            user_input=user_input,
-            actor_id="local_user",
-            session_id="local_session_343434"
-        )
-
-        print("\nAgent >", response)
+    print("\nAgent >", response)
 
 
 if __name__ == "__main__":

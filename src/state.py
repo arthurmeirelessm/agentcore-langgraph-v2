@@ -30,3 +30,10 @@ class AgentState(TypedDict):
     # Controle de fluxo
     next_step: str
     error: Optional[str]
+    
+    goal: Optional[str]
+    topic: Optional[str]
+    
+    last_episode: Optional[dict]
+    signals: Optional[dict]
+    outcome: Optional[str]

@@ -12,6 +12,18 @@
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             }
+        },
+        {
+            "name": "Debug Agent - retrive episodic.py",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/episodic_test_retrieve.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "justMyCode": true,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
         }
     ]
 }

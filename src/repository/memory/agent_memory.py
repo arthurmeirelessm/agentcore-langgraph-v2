@@ -9,6 +9,7 @@ from src.config.settings import settings
 from src.utils.logger import setup_logger
 import uuid
 from datetime import datetime
+import json
 
 logger = setup_logger(__name__)
 
@@ -112,34 +113,43 @@ class AgentMemory:
             
     
     
-    def save_episode(self, state) -> None:
+    def save_episode_in_agentcore_memory(self, state) -> None:
         if not self.enabled:
             return
 
         actor_id = self._normalize_actor_id(state["actor_id"])
         session_id = self._build_session_id(state)
 
-        episode_payload = {
-            "episode": {
-                "goal": state.get("intent", "unknown"),
-                "actions": state.get("tools_to_execute", ["direct_answer"]),
-                "outcome": (
-                    "follow_up"
-                    if state.get("follow_up")
-                    else "completed"
-                ),
-                "signals": {
-                    "success": not state.get("error", False),
-                    "topic": state.get("topic")
-                }
+        episode_content = {
+            "goal": state.get("goal", "unknown"),
+            "actions": state.get("tools_to_execute", ["direct_answer"]),
+            "outcome": state.get("outcome"),
+            "signals": {
+                "success": not state.get("error", False),
+                "topic": state.get("topic")
             }
         }
-        
-        try: 
+
+        # Payload no formato aceito pelo AgentCore Memory
+        episode_payload = [
+            {
+                "conversational": {
+                    "role": "ASSISTANT",              # obrigatório
+                    "content": {
+                        "text": json.dumps(episode_content)  # ✅ só 'text' é aceito
+                    }
+                }
+            }
+        ]
+
+        try:
+            event_timestamp = datetime.utcnow() 
+            
             self.client.create_event(
                 memoryId=settings.MEMORY_ID,
                 actorId=actor_id,
                 sessionId=session_id,
+                eventTimestamp=event_timestamp,
                 payload=episode_payload
             )
         except Exception:
