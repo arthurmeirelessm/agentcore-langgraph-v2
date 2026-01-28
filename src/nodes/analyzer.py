@@ -49,7 +49,10 @@ def analyze_request(state: AgentState) -> dict:
         - get_stock_data: Obter dados de preços de ações em tempo real para um determinado símbolo
         - search_news: Pesquisar notícias financeiras
         - search_football_news: Pesquisar notícias do futebol mundial
-
+        - get_user_for_request_food_action: Ação que envolve pegar informações do user para prosseguir com pedido de comida
+        - get_restaurants: Pega localização que veio do resultado da tool get_user_for_request_food_action() e busca restaurantes perto dessal ocalização
+        - request_order: Faz pedido de itens ao restaurante escolhido
+ 
         Responda com um objeto JSON contendo:
         {{
             "tools_needed": ["tool1", "tool2"],

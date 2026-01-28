@@ -24,6 +24,18 @@
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             }
+        },
+           {
+            "name": "Debug Agent - agent gateway",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/agentcore_gateway.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "justMyCode": true,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
         }
     ]
 }

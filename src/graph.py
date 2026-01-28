@@ -1,69 +1,100 @@
 """
-Definição do grafo LangGraph
+Definição do grafo LangGraph – Market Trends Agent
 """
+
 from langgraph.graph import StateGraph, END
+
 from src.state import AgentState
 from src.nodes.analyzer import analyze_request
 from src.nodes.tools_executor import execute_tools
 from src.utils.logger import setup_logger
-from src.nodes.memory_loader import MemoryLoader
 
 logger = setup_logger(__name__)
 
+# -------------------------------------------------------------------
+# Constantes de estados do grafo
+# -------------------------------------------------------------------
+
+ANALYZE = "analyze"
+EXECUTE_TOOLS = "execute_tools"
+END_STATE = "end"
+
+
+# -------------------------------------------------------------------
+# Funções de decisão (roteamento condicional)
+# -------------------------------------------------------------------
+
+def should_execute_tools(state: AgentState) -> str:
+    """
+    Decide se o fluxo deve executar ferramentas ou finalizar.
+
+    Retorna:
+        - EXECUTE_TOOLS: quando ferramentas devem ser executadas
+        - END_STATE: quando o fluxo deve encerrar
+    """
+    return EXECUTE_TOOLS if state.get("next_step") == EXECUTE_TOOLS else END_STATE
+
+
+# -------------------------------------------------------------------
+# Builder do grafo
+# -------------------------------------------------------------------
 
 def create_market_agent_graph() -> StateGraph:
     """
-    Cria o grafo do Market Trends Agent
-    
+    Cria e configura o grafo do Market Trends Agent.
+
+    Fluxo:
+        analyze -> (condicional) -> execute_tools -> END
+                          └────> END
+
     Returns:
         StateGraph configurado
     """
     logger.info("Creating market agent graph...")
-    
-    # Cria grafo
-    workflow = StateGraph(AgentState)
-    
-    # Adiciona nós
-    workflow.add_node("load_memory", MemoryLoader())
 
-    workflow.add_node("analyze", analyze_request)
-    workflow.add_node("execute_tools", execute_tools)
-    
-    # Define ponto de entrada
-    workflow.set_entry_point("load_memory")
-    
-    workflow.add_edge("load_memory", "analyze")
-    
-    # Define transições condicionais
-    def should_execute_tools(state: AgentState) -> str:
-        """Decide se deve executar ferramentas ou finalizar"""
-        next_step = state.get("next_step", "end")
-        if next_step == "execute_tools":
-            return "execute_tools"
-        return "end"
-    
-    # Adiciona edges
+    workflow = StateGraph(AgentState)
+
+    # ---------------------------
+    # Nós
+    # ---------------------------
+    workflow.add_node(ANALYZE, analyze_request)
+    workflow.add_node(EXECUTE_TOOLS, execute_tools)
+
+    # ---------------------------
+    # Ponto de entrada
+    # ---------------------------
+    workflow.set_entry_point(ANALYZE)
+
+    # ---------------------------
+    # Transições
+    # ---------------------------
     workflow.add_conditional_edges(
-        "analyze",
+        ANALYZE,
         should_execute_tools,
         {
-            "execute_tools": "execute_tools",
-            "end": END
+            EXECUTE_TOOLS: EXECUTE_TOOLS,
+            END_STATE: END
         }
     )
     
-    workflow.add_edge("execute_tools", END)
-    
+    # Conecta dois nós sequencias se necessário
+    # EX: workflow.add_edge("step_1", "step_2")
+    #     workflow.add_edge("step_2", "step_3")
+    workflow.add_edge(EXECUTE_TOOLS, END)
+
     logger.info("Graph created successfully")
     return workflow
 
 
+# -------------------------------------------------------------------
+# Compile
+# -------------------------------------------------------------------
+
 def compile_graph():
     """
-    Compila o grafo para uso
-    
+    Compila o grafo para uso em runtime.
+
     Returns:
-        Grafo compilado
+        Grafo LangGraph compilado
     """
-    workflow = create_market_agent_graph()
-    return workflow.compile()
+    return create_market_agent_graph().compile()
