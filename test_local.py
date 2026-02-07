@@ -6,11 +6,11 @@ def main():
     print("🧠 Market Trends Agent (local)")
     print("Digite 'exit' para sair")
 
-    user_input = "Noticia Barcelona"
+    user_input = "Algo sobre AAPL?"
     
     response = agent.process_request(
         user_input=user_input,
-        actor_id="local_user",
+        actor_id="user_sl_001",
         session_id="local_session_343434"
     )
 

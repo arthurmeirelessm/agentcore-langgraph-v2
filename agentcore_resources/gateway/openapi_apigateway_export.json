@@ -45,6 +45,7 @@
     },
     "/delivery-food/user/{user_id}" : {
       "get" : {
+        "operationId" : "get-user",
         "parameters" : [ {
           "name" : "user_id",
           "in" : "path",
@@ -83,46 +84,16 @@
     },
     "/delivery-food/order" : {
       "post" : {
-        "operationId": "order",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["restaurant_id", "items"],
-                "properties": {
-                  "restaurant_id": {
-                    "type": "string",
-                    "description": "ID do restaurante"
-                  },
-                  "items": {
-                    "type": "array",
-                    "description": "Lista de itens do pedido",
-                    "items": {
-                      "type": "object",
-                      "required": ["item_id", "name", "unit_price", "quantity"],
-                      "properties": {
-                        "item_id": {
-                          "type": "string"
-                        },
-                        "name": {
-                          "type": "string"
-                        },
-                        "unit_price": {
-                          "type": "number",
-                          "format": "float"
-                        },
-                        "quantity": {
-                          "type": "integer"
-                        }
-                      }
-                    }
-                  }
-                }
+        "operationId" : "order",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MODELdfebcd"
               }
             }
-          }
+          },
+          "required" : true
         },
         "responses" : {
           "200" : {
@@ -154,21 +125,16 @@
     },
     "/delivery-food/location" : {
       "post" : {
-        "operationId": "location", 
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "city": { "type": "string" },
-                  "neighborhood": { "type": "string" }
-                },
-                "required": ["city", "neighborhood"]
+        "operationId" : "location",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MODEL4e24a4"
               }
             }
-          }
+          },
+          "required" : true
         },
         "responses" : {
           "200" : {
@@ -201,9 +167,55 @@
   },
   "components" : {
     "schemas" : {
+      "MODEL4e24a4" : {
+        "required" : [ "city", "neighborhood" ],
+        "type" : "object",
+        "properties" : {
+          "city" : {
+            "type" : "string"
+          },
+          "neighborhood" : {
+            "type" : "string"
+          }
+        }
+      },
       "Empty" : {
         "title" : "Empty Schema",
         "type" : "object"
+      },
+      "MODELdfebcd" : {
+        "required" : [ "items", "restaurant_id" ],
+        "type" : "object",
+        "properties" : {
+          "restaurant_id" : {
+            "type" : "string",
+            "description" : "ID do restaurante"
+          },
+          "items" : {
+            "type" : "array",
+            "description" : "Lista de itens do pedido",
+            "items" : {
+              "required" : [ "item_id", "name", "quantity", "unit_price" ],
+              "type" : "object",
+              "properties" : {
+                "item_id" : {
+                  "type" : "string"
+                },
+                "name" : {
+                  "type" : "string"
+                },
+                "unit_price" : {
+                  "type" : "number",
+                  "format" : "float"
+                },
+                "quantity" : {
+                  "type" : "integer",
+                  "format" : "int32"
+                }
+              }
+            }
+          }
+        }
       }
     }
   },

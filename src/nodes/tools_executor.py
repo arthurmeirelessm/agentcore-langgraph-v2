@@ -5,6 +5,7 @@ from src.state import AgentState
 from src.tools.news_tools import search_news
 from src.tools.stock_tools import get_stock_data
 from src.tools.news_football import search_football_news
+from src.tools.request_food import get_user, location, simulate_order_price
 from src.utils.logger import setup_logger
 
 logger = setup_logger(__name__)
@@ -17,76 +18,126 @@ TOOLS = {
 
 
 def execute_tools(state: AgentState) -> dict:
-    """
-    Executa tools via Bedrock tool calling.
-    Retorna APENAS o delta do estado, evitando duplicar mensagens do usuário.
-    """
     try:
-        logger.info("Executing tools with LangGraph-native flow...")
-        
+        logger.info("Executing tools with deterministic workflow...")
 
-        messages = state.get("messages", [])
+        stage = state.get("food_flow_stage")
+        domain = state.get("domain")
+        symbol = state.get("symbol", "")
 
-        llm = ChatBedrock(
-            model_id=settings.MODEL_ID,
-            region_name=settings.AWS_REGION,
-            model_kwargs={
-                "temperature": settings.MODEL_TEMPERATURE,
-                "max_tokens": settings.MODEL_MAX_TOKENS,
-            },
-        ).bind_tools(list(TOOLS.values()))
+        if domain == "food":
+            if stage == "start":
+                user_data = get_user.invoke({"user_id": state["actor_id"]})
 
-        # ⚠️ cria nova lista, NÃO muta state["messages"]
-        new_messages = list(messages)
+                city = user_data.get("city")
+                neighborhood = user_data.get("neighborhood")
 
-        # Primeira chamada do LLM
-        ai_message: AIMessage = llm.invoke(new_messages)
-        new_messages.append(ai_message)
+                if not city or not neighborhood:
+                    return {
+                        "response_payload": {
+                            "data": "Não consegui identificar sua localização."
+                        },
+                        "next_step": "respond_food"
+                    }
 
-        # Lista para acumular apenas mensagens novas (delta)
-        delta_messages = [ai_message]
+                restaurants_data = location.invoke({
+                    "city": city,
+                    "neighborhood": neighborhood
+                })
 
-        # Se houver tool calls
-        if ai_message.tool_calls:
-            for call in ai_message.tool_calls:
-                tool_name = call["name"]
-                tool_args = call["args"]
+                if not restaurants_data:
+                    return {
+                        "response_payload": {
+                            "data": "Não consegui identificar sua localização."
+                        },
+                        "next_step": "respond_food"
+                    }
 
-                logger.info(f"Calling tool: {tool_name} {tool_args}")
+                city = restaurants_data.get("city")
+                neighborhood = restaurants_data.get("neighborhood")
+                total = restaurants_data.get("total_restaurants", 0)
+                restaurants = restaurants_data.get("restaurants", [])
 
-                tool_fn = TOOLS.get(tool_name)
-                if not tool_fn:
-                    raise ValueError(f"Tool '{tool_name}' not found")
+                if total == 0:
+                    return {
+                        "response_payload": {
+                            "data": f"Não encontrei restaurantes em {neighborhood}, {city}."
+                        },
+                        "next_step": "respond_food"
+                    }
 
-                tool_result = tool_fn.invoke(tool_args)
+                header = f"Encontrei **{total} restaurantes** em {neighborhood}, {city}:\n\n"
+                restaurant_blocks = []
 
-                tool_message = ToolMessage(
-                    tool_call_id=call["id"],
-                    content=str(tool_result),
-                )
+                for i, r in enumerate(restaurants, start=1):
+                    name = r.get("name")
+                    category = r.get("category")
+                    rating = r.get("rating")
+                    price_level = r.get("price_level")
 
-                new_messages.append(tool_message)
-                delta_messages.append(tool_message)
+                    block = (
+                        f"{i}. **{name}**\n"
+                        f"Categoria: {category}\n"
+                        f"Avaliação: ⭐ {rating} | Faixa de preço: {price_level}\n"
+                    )
 
-            # Segunda chamada com resultado das tools
-            final_ai_message: AIMessage = llm.invoke(new_messages)
-            new_messages.append(final_ai_message)
-            delta_messages.append(final_ai_message)
+                    menu = r.get("menu", [])
+                    if menu:
+                        block += f"Menu do {name}:\n"
+                        for item in menu:
+                            item_name = item.get("name")
+                            item_price = item.get("price")
+                            block += f"   • {item_name} — R${item_price}\n"
+                    else:
+                        block += "Menu não disponível.\n"
 
-            final_response = final_ai_message.content
-        else:
-            final_response = ai_message.content
+                    restaurant_blocks.append(block)
+
+                formatted_response = header + "\n".join(restaurant_blocks)
+
+                return {
+                    "response_payload": {
+                        "data": formatted_response
+                    },
+                    "last_action": "fetched_restaurants",
+                    "next_step": "respond_food"
+                }
+
+            if stage == "select":
+                order_data = simulate_order_price.invoke({})
+
+                return {
+                    "response_payload": {
+                        "data": order_data
+                    },
+                    "last_action": "calculated_order",
+                    "next_step": "respond_food"
+                }
+
+        if domain == "finance":
+            stock_data = get_stock_data.invoke(symbol)
+            return {
+                "response_payload": {"data": stock_data},
+                "last_action": "stock_lookup",
+                "next_step": "respond_finance"
+            }
+
+        if domain == "football":
+            news = search_football_news.invoke({"query": state["goal"]})
+            return {
+                "response_payload": {"data": news},
+                "last_action": "football_news",
+                "next_step": "respond_football"
+            }
 
         return {
-            "messages": delta_messages,  
-            "final_response": final_response,
-            "next_step": "end",
+            "response_payload": {"data": state.get("goal")},
+            "next_step": "respond"
         }
 
     except Exception as e:
-        logger.exception("Error in execute_tools")
+        logger.exception("Tool execution error")
         return {
             "error": str(e),
-            "final_response": "I encountered an error while processing your request.",
-            "next_step": "end",
+            "next_step": "respond"
         }

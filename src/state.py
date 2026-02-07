@@ -1,39 +1,38 @@
 """
 Estado do agente LangGraph
 """
-from typing import TypedDict, List, Optional, Annotated
+from typing import TypedDict, List, Optional, Annotated, Dict, Any
 from operator import add
 
 
-class AgentState(TypedDict):
+class AgentState(TypedDict, total=False):
     """
     Estado compartilhado entre os nós do grafo
     """
-    # Mensagens do usuário e assistente
+
     messages: Annotated[List[dict], add]
-    
-    # Informações do usuário
+
     actor_id: str
     session_id: str
-    
-    # Contexto da conversa
-    user_profile: Optional[dict]
-    conversation_history: Annotated[List[dict], add]
-    
-    # Ferramentas e análise
-    tools_to_execute: List[str]
-    tools_results: dict
-    
-    # Resposta final
-    final_response: Optional[str]
-    
-    # Controle de fluxo
-    next_step: str
-    error: Optional[str]
-    
+
+    domain: Optional[str]             
+    conversation_mode: Optional[str]   
+
     goal: Optional[str]
     topic: Optional[str]
     
-    last_episode: Optional[dict]
-    signals: Optional[dict]
-    outcome: Optional[str]
+    symbol: Optional[str]
+
+    food_flow_stage: Optional[str]     
+    selected_restaurant: Optional[str]
+    cart: Optional[List[Dict[str, Any]]]  
+
+    next_step: Optional[str]          
+    last_action: Optional[str]
+    
+    user_input: Optional[str]     
+
+    response_payload: Optional[Any]   
+    final_response: Optional[str]     
+
+    error: Optional[str]

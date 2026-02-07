@@ -7,6 +7,7 @@ import requests
 import urllib.parse
 from bs4 import BeautifulSoup
 from langchain.tools import tool
+import certifi
 
 from src.config.settings import settings
 from src.utils.logger import setup_logger
@@ -68,6 +69,7 @@ def search_football_news(
             url,
             headers={"User-Agent": settings.USER_AGENT},
             timeout=settings.REQUEST_TIMEOUT,
+            verify=certifi.where()
         )
 
         if response.status_code != 200:

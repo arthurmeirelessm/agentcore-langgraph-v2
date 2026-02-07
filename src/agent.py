@@ -3,6 +3,7 @@ Classe principal do Market Trends Agent usando LangGraph
 """
 from src.graph import compile_graph
 from src.state import AgentState
+from src.repository.semantic_cache.redis import get_answer_from_cache
 from src.utils.logger import setup_logger
 import traceback
 
@@ -52,22 +53,31 @@ class MarketTrendsAgent:
             logger.info(f"Processing request from {actor_id}: {user_input[:100]}...")
             
             
-            # Cria estado inicial
+            cache_hit = get_answer_from_cache(user_input)
+            
+            if cache_hit:
+                print("⚡ CACHE HIT")
+                return cache_hit
+ 
             initial_state: AgentState = {
                 "messages": [{"role": "user", "content": user_input}],
                 "actor_id": actor_id,
                 "session_id": session_id,
-                "user_profile": None,
-                "conversation_history": [],
-                "tools_to_execute": [],
-                "tools_results": {},
-                "final_response": None,
-                "next_step": "analyze",
-                "topic": None,
+                "domain": "general",          
+                "conversation_mode": "task",  
                 "goal": None,
+                "topic": None,
+                "food_flow_stage": None,
+                "selected_restaurant": None,
+                "cart": [],
+                "next_step": "analyze",
+                "last_action": None,
+                "response_payload": None,
+                "final_response": None,
+                "user_input": None,
                 "error": None,
-                "signals": None,
             }
+
 
             # Executa o grafo
             result = self.graph.invoke(initial_state)

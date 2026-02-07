@@ -1,0 +1,7 @@
+FT.CREATE myIndex ON HASH PREFIX 1 "doc:" SCHEMA \
+question TEXT \
+answer TEXT \
+vector_field VECTOR HNSW 6 \
+TYPE FLOAT32 \
+DIM 1536 \
+DISTANCE_METRIC COSINE

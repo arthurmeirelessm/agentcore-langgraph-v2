@@ -29,7 +29,7 @@
             "name": "Debug Agent - agent gateway",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/agentcore_gateway.py",
+            "program": "${workspaceFolder}/agentcore_resources/gateway/agentcore_gateway.py",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}",
             "justMyCode": true,
