@@ -1,3 +1,20 @@
+# --- Redis Semantic Cache Setup ---
+# 1. Subimos o Redis Stack via Docker (redis/redis-stack) porque o Redis padrão
+#    não suporta busca vetorial. O Stack inclui o módulo RediSearch.
+#    docker run -d --name redis-stack -p 6379:6379 -p 8001:8001 redis/redis-stack:latest
+#
+# 2. Acessamos o redis-cli dentro do container:
+#    docker exec -it redis-stack redis-cli
+#
+# 3. Criamos o índice vetorial necessário para KNN search de embeddings:
+#    FT.CREATE myIndex ON HASH PREFIX 1 "doc:" SCHEMA
+#    question TEXT answer TEXT
+#    vector_field VECTOR HNSW 6 TYPE FLOAT32 DIM 1536 DISTANCE_METRIC COSINE
+#
+# Isso permite salvar embeddings como vetores e recuperar respostas por similaridade semântica.
+
+
+
 import uuid
 import numpy as np
 from src.utils.bedrock import get_embedding
